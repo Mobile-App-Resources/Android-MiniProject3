@@ -14,12 +14,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+import com.tistory.puzzleleaf.androidminiproject3.MainActivity;
 import com.tistory.puzzleleaf.androidminiproject3.R;
 
 import butterknife.BindView;
@@ -43,6 +44,9 @@ public class AddFragment extends BaseFragment {
     @BindView(R.id.add_next)
     Button next; @BindView(R.id.add_prev) Button prev;
 
+    private String latitude;
+    private String longitude;
+
 
     @Nullable
     @Override
@@ -50,7 +54,6 @@ public class AddFragment extends BaseFragment {
         View view = inflater.inflate(R.layout.fragment_add,container,false);
         ButterKnife.bind(this,view);
         viewInit();
-
         return view;
     }
 
@@ -60,14 +63,12 @@ public class AddFragment extends BaseFragment {
             if (resultCode == RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(getContext(), data);
                 address.setText(place.getAddress().toString());
-                Log.i("qwe", "Place: " + place.getName());
-            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
-                Status status = PlaceAutocomplete.getStatus(getContext(), data);
-                // TODO: Handle the error.
-                Log.i("qwe", status.getStatusMessage());
+                latitude = String.valueOf(place.getLatLng().latitude);
+                longitude = String.valueOf(place.getLatLng().longitude);
 
-            } else{
-                // The user canceled operation.
+            } else {
+                address.setText("");
+                Toast.makeText(getContext(),"에러 발생",Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -95,9 +96,7 @@ public class AddFragment extends BaseFragment {
     @OnClick(R.id.add_address)
     public void addAddress(){
         try {
-            Intent intent =
-                    new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
-                            .build(getActivity());
+            Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN).build(getActivity());
             startActivityForResult(intent, SEARCHADDRESS);
         } catch (GooglePlayServicesRepairableException e) {
             // TODO: Handle the error.
@@ -106,6 +105,22 @@ public class AddFragment extends BaseFragment {
             // TODO: Handle the error.
             Log.d("qwe",e.getMessage());
         }
+    }
+
+    //데이터가 있는지 없는지 검증
+    private boolean isData(){
+        if(name.length()>0 && address.length()>0 && number.length()>0 && description.length()>0){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    private void dataClear(){
+        number.setText("");
+        address.setText("");
+        number.setText("");
+        description.setText("");
     }
 
     //텍스트 카운트 설정
@@ -122,6 +137,14 @@ public class AddFragment extends BaseFragment {
 
     @OnClick(R.id.add_next)
     public void nextBtn(){
-        startFragment(MapFragment.class);
+        if(isData()) {
+            MainActivity.dbHelper.insert(name.getText().toString(), address.getText().toString(), number.getText().toString(),
+                    description.getText().toString(), latitude, longitude);
+            dataClear();
+            startFragment(MapFragment.class);
+        }
+        else{
+            Toast.makeText(getContext(),"데이터를 입력해주세요",Toast.LENGTH_SHORT).show();
+        }
     }
 }

@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+
+import com.tistory.puzzleleaf.androidminiproject3.db.DBHelper;
 import com.tistory.puzzleleaf.androidminiproject3.fragment.AddFragment;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -13,6 +15,7 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static DBHelper dbHelper;
     @BindView(R.id.toolbar) Toolbar toolbar;
 
     @Override
@@ -20,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        dbHelper = new DBHelper(getApplicationContext(),"MarkerData.db",null,1);
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
