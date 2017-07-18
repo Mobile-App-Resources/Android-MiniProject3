@@ -4,6 +4,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.tistory.puzzleleaf.androidminiproject3.item.MarkerData;
 
@@ -24,8 +26,6 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         // 새로운 테이블 생성
-        /* 이름은 MONEYBOOK이고, 자동으로 값이 증가하는 _id 정수형 기본키 컬럼과
-        item 문자열 컬럼, price 정수형 컬럼, create_at 문자열 컬럼으로 구성된 테이블을 생성. */
         db.execSQL("CREATE TABLE MARKER (_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, address TEXT, number TEXT, description TEXT, latitude TEXT, longitude TEXT);");
     }
 
@@ -38,24 +38,23 @@ public class DBHelper extends SQLiteOpenHelper {
     public void insert(String name, String address, String number, String description, String latitude, String longitude) {
         // 읽고 쓰기가 가능하게 DB 열기
         SQLiteDatabase db = getWritableDatabase();
-        // DB에 입력한 값으로 행 추가
         db.execSQL("INSERT INTO MARKER VALUES(null, '" + name + "', '" + address + "', '"+ number +"', '" + description + "', '" + latitude + "', '"+ longitude +"');");
         db.close();
     }
 
-    public void update(String item, int price) {
-        SQLiteDatabase db = getWritableDatabase();
-        // 입력한 항목과 일치하는 행의 가격 정보 수정
-        db.execSQL("UPDATE MARKER SET price=" + price + " WHERE item='" + item + "';");
-        db.close();
+    public String selectName(String address){
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "select * from MARKER where address = '"+address+"';";
+        Cursor cursor = db.rawQuery(query,null);
+        if(cursor.moveToFirst()){
+            String info = cursor.getString(1) + " " + cursor.getString(3) + " " + cursor.getString(4);
+            return info;
+        }
+        else {
+            return "정보가 없습니다.";
+        }
     }
 
-    public void delete(String item) {
-        SQLiteDatabase db = getWritableDatabase();
-        // 입력한 항목과 일치하는 행 삭제
-        db.execSQL("DELETE FROM MONEYBOOK WHERE item='" + item + "';");
-        db.close();
-    }
 
     public ArrayList<MarkerData> getResult() {
         // 읽기가 가능하게 DB 열기

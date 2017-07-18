@@ -1,8 +1,7 @@
 <resources>
     <string name="app_name">맛집 등록</string>
 
-    <string name="text_cnt">글자수 : </string>
-    <string name="text_cnt_max">/500</string>
+    <string name="text_cnt">글자수 : %d/500</string>
 
     <string name="btn_left">이전</string>
     <string name="btn_right">다음</string>

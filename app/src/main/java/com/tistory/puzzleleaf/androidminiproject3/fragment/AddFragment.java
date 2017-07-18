@@ -20,8 +20,9 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
-import com.tistory.puzzleleaf.androidminiproject3.MainActivity;
 import com.tistory.puzzleleaf.androidminiproject3.R;
+import com.tistory.puzzleleaf.androidminiproject3.db.Db;
+import com.tistory.puzzleleaf.androidminiproject3.service.DbService;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -65,10 +66,9 @@ public class AddFragment extends BaseFragment {
                 address.setText(place.getAddress().toString());
                 latitude = String.valueOf(place.getLatLng().latitude);
                 longitude = String.valueOf(place.getLatLng().longitude);
-
             } else {
                 address.setText("");
-                Toast.makeText(getContext(),"에러 발생",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(),"입력 값이 없습니다.",Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -117,7 +117,7 @@ public class AddFragment extends BaseFragment {
         }
     }
     private void dataClear(){
-        number.setText("");
+        name.setText("");
         address.setText("");
         number.setText("");
         description.setText("");
@@ -125,8 +125,12 @@ public class AddFragment extends BaseFragment {
 
     //텍스트 카운트 설정
     private void textCountSet(){
-        countView.setText(getResources().getString(R.string.text_cnt) +" "+ String.valueOf(description.length())
-                + getResources().getString(R.string.text_cnt_max));
+        countView.setText(String.format(getResources().getString(R.string.text_cnt),description.length()));
+    }
+
+    private void refreshData(){
+        Intent intent = new Intent(getActivity(), DbService.class);
+        getActivity().startService(intent);
     }
 
     //하단 버튼
@@ -138,13 +142,16 @@ public class AddFragment extends BaseFragment {
     @OnClick(R.id.add_next)
     public void nextBtn(){
         if(isData()) {
-            MainActivity.dbHelper.insert(name.getText().toString(), address.getText().toString(), number.getText().toString(),
+            Db.dbHelper.insert(name.getText().toString(), address.getText().toString(), number.getText().toString(),
                     description.getText().toString(), latitude, longitude);
             dataClear();
+            refreshData();
             startFragment(MapFragment.class);
         }
         else{
-            Toast.makeText(getContext(),"데이터를 입력해주세요",Toast.LENGTH_SHORT).show();
+            refreshData();
+            startFragment(MapFragment.class);
+           // Toast.makeText(getContext(),"데이터를 입력해주세요",Toast.LENGTH_SHORT).show();
         }
     }
 }

@@ -1,12 +1,22 @@
 package com.tistory.puzzleleaf.androidminiproject3.fragment;
 
 
+import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -15,11 +25,13 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.tistory.puzzleleaf.androidminiproject3.MainActivity;
 import com.tistory.puzzleleaf.androidminiproject3.R;
+import com.tistory.puzzleleaf.androidminiproject3.db.Db;
 import com.tistory.puzzleleaf.androidminiproject3.item.MarkerData;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -34,13 +46,23 @@ import butterknife.ButterKnife;
 public class MapFragment extends BaseFragment implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private boolean isRefreshed = false;
+    private DbRefreshBroadCastReceiver dbRefresh;
+
     @BindView(R.id.map) MapView mapView;
+    @BindView(R.id.map_address) TextView mapAddress;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        dbBroadCastInit(); //BroadCastReceiver 등록
+    }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_map,container,false);
-        ButterKnife.bind(this,view);
+        View view = inflater.inflate(R.layout.fragment_map, container, false);
+        ButterKnife.bind(this, view);
         mapView.getMapAsync(this);
         return view;
     }
@@ -48,28 +70,99 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mapLocationZoomInit();
+        markerClickListener();
+        markerDragListener();
 
-        LatLng mkLatLng = null;
-        ArrayList<MarkerData> markerDatas = MainActivity.dbHelper.getResult();
-        for(MarkerData temp : markerDatas) {
-            mkLatLng = new LatLng(temp.getLatitude(),temp.getLongitude());
-            Marker marker = mMap.addMarker(new MarkerOptions().position(mkLatLng)
-                    .title(temp.getName()).snippet(temp.getAddress()+"\n"+temp.getNumber()+"\n"+temp.getDescription()).snippet("qwe"));
-            marker.showInfoWindow();
-        }
-        if(mkLatLng!=null) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mkLatLng,15f));
-
+        //이미 초기화 되었다면 하지 않는다.
+        if (!isRefreshed) {
+            refreshData();
         }
     }
 
+    //Location과 Zoom 버튼 설정
+    private void mapLocationZoomInit(){
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mMap.setMyLocationEnabled(true);
+            mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        }
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+    }
 
+    //마커를 클릭하면 동작할 이벤트
+    private void markerClickListener(){
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                marker.showInfoWindow();
+                mapAddress.setText(marker.getSnippet());
+                Toast.makeText(getContext(), Db.dbHelper.selectName(marker.getSnippet()), Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        });
+    }
+
+    //마커 드레그 리스너
+    private void markerDragListener(){
+        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+            }
+            @Override
+            public void onMarkerDrag(Marker marker) {
+            }
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+                Geocoder geocoder;
+                List<android.location.Address> addresses;
+                geocoder = new Geocoder(getContext(), Locale.getDefault());
+                try {
+                    addresses = geocoder.getFromLocation(marker.getPosition().latitude, marker.getPosition().longitude, 1);
+                    //address country city
+                    String address = addresses.get(0).getAddressLine(1) + addresses.get(0).getAddressLine(0);
+
+                    marker.setTitle("null");
+                    marker.setSnippet(address);
+                    marker.hideInfoWindow();
+
+                    mapAddress.setText(address);
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(),15f));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    //마커에 데이터를 추가
+    private void refreshData() {
+        LatLng mkLatLng = null;
+        for (MarkerData temp : Db.markerDatas) {
+            mkLatLng = new LatLng(temp.getLatitude(), temp.getLongitude());
+            mMap.addMarker(new MarkerOptions().position(mkLatLng)
+                    .title(temp.getName()).snippet(temp.getAddress()).draggable(true)).showInfoWindow();
+        }
+        if (mkLatLng != null) {
+            //마지막에 추가된 지역으로 이동
+            mapAddress.setText(Db.markerDatas.get(Db.markerDatas.size()-1).getAddress());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mkLatLng, 15f));
+        }
+    }
+
+    //BroadCast 등록
+    private void dbBroadCastInit() {
+        dbRefresh = new DbRefreshBroadCastReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("dbrefresh");
+        getActivity().registerReceiver(dbRefresh, filter);
+    }
 
     //MapView를 위한 수명주기 설정
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if(mapView!=null){
+        if (mapView != null) {
             mapView.onCreate(savedInstanceState);
         }
     }
@@ -102,7 +195,22 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback {
     public void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+        //BroadCast 해제
+        getActivity().unregisterReceiver(dbRefresh);
     }
 
+    private class DbRefreshBroadCastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // COMPLETED 백그라운드 쓰레드에서 데이터 갱신이 완료 된 이후에 마커를 추가해야 한다.
+            // COMPLETED 맵 초기화 보다 데이터 갱신이 빠를 수 있다. 예외 처리가 필요하다.
+            if (intent.getAction().equals("dbRefresh")) {
+                if (mMap != null) {
+                    refreshData();
+                    isRefreshed = !isRefreshed; // 이미 갱신 했음을 체크
+                }
+            }
+        }
 
+    }
 }

@@ -34,7 +34,6 @@ import static android.app.Activity.RESULT_OK;
 
 public class MainFragment extends BaseFragment {
 
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
