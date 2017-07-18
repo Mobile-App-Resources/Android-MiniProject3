@@ -1,10 +1,13 @@
 package com.tistory.puzzleleaf.androidminiproject3.fragment;
 
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
+import android.support.v4.app.ActivityCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -42,12 +45,10 @@ public class AddFragment extends BaseFragment {
     @BindView(R.id.add_address) TextView address; @BindView(R.id.add_description) EditText description;
     @BindView(R.id.add_description_count) TextView countView;
     //하단 버튼
-    @BindView(R.id.add_next)
-    Button next; @BindView(R.id.add_prev) Button prev;
+    @BindView(R.id.add_next) Button next; @BindView(R.id.add_prev) Button prev;
 
     private String latitude;
     private String longitude;
-
 
     @Nullable
     @Override
@@ -80,15 +81,12 @@ public class AddFragment extends BaseFragment {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int start, int before, int count) {
             }
-
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 textCountSet();
             }
-
             @Override
             public void afterTextChanged(Editable editable) {
-
             }
         });
     }
@@ -100,10 +98,10 @@ public class AddFragment extends BaseFragment {
             startActivityForResult(intent, SEARCHADDRESS);
         } catch (GooglePlayServicesRepairableException e) {
             // TODO: Handle the error.
-            Log.d("qwe",e.getMessage());
+            Toast.makeText(getContext(),"에러가 발생했습니다.",Toast.LENGTH_SHORT).show();
         } catch (GooglePlayServicesNotAvailableException e) {
             // TODO: Handle the error.
-            Log.d("qwe",e.getMessage());
+            Toast.makeText(getContext(),"에러가 발생했습니다.",Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -128,6 +126,7 @@ public class AddFragment extends BaseFragment {
         countView.setText(String.format(getResources().getString(R.string.text_cnt),description.length()));
     }
 
+    //백그라운드에서 DB데이터를 읽어옴
     private void refreshData(){
         Intent intent = new Intent(getActivity(), DbService.class);
         getActivity().startService(intent);
@@ -151,7 +150,7 @@ public class AddFragment extends BaseFragment {
         else{
             refreshData();
             startFragment(MapFragment.class);
-           // Toast.makeText(getContext(),"데이터를 입력해주세요",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),"모든 데이터를 입력해야 등록됩니다.\nView 모드로 동작합니다.",Toast.LENGTH_SHORT).show();
         }
     }
 }

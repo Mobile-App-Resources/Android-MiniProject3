@@ -21,7 +21,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
         </com.google.android.gms.maps.MapView>
-
         <TextView
             android:id="@+id/map_address"
             android:layout_width="0dp"
