@@ -1,6 +1,5 @@
 package com.tistory.puzzleleaf.androidminiproject3.fragment;
 
-
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,10 +10,10 @@ import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,9 +31,9 @@ import com.tistory.puzzleleaf.androidminiproject3.item.MarkerData;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 /**
  * Created by cmtyx on 2017-07-16.
@@ -49,6 +48,7 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback {
     private boolean isRefreshed = false;
     private DbRefreshBroadCastReceiver dbRefresh;
 
+    @BindView(R.id.map_btn) Button mapButton;
     @BindView(R.id.map) MapView mapView;
     @BindView(R.id.map_address) TextView mapAddress;
 
@@ -123,7 +123,7 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback {
                 geocoder = new Geocoder(getContext(), Locale.getDefault());
                 try {
                     addresses = geocoder.getFromLocation(marker.getPosition().latitude, marker.getPosition().longitude, 1);
-                    //address country city
+
                     String address = addresses.get(0).getAddressLine(1) + addresses.get(0).getAddressLine(0);
 
                     marker.setTitle("null");
@@ -160,6 +160,11 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback {
         IntentFilter filter = new IntentFilter();
         filter.addAction("dbrefresh");
         getActivity().registerReceiver(dbRefresh, filter);
+    }
+
+    @OnClick(R.id.map_btn)
+    public void mapButtonClick(){
+        getActivity().onBackPressed();
     }
 
     //MapView를 위한 수명주기 설정
@@ -206,8 +211,8 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback {
     private class DbRefreshBroadCastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            // COMPLETED 백그라운드 쓰레드에서 데이터 갱신이 완료 된 이후에 마커를 추가해야 한다.
-            // COMPLETED 맵 초기화 보다 데이터 갱신이 빠를 수 있다. 예외 처리가 필요하다.
+            // 백그라운드 쓰레드에서 데이터 갱신이 완료 된 이후에 마커를 추가해야 한다.
+            // 맵 초기화 보다 데이터 갱신이 빠를 수 있다. 예외 처리가 필요하다.
             if (intent.getAction().equals("dbRefresh")) {
                 if (mMap != null) {
                     refreshData();
@@ -217,6 +222,7 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback {
         }
     }
 
+    //권한 설정
     private void setPermission(){
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -224,7 +230,7 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback {
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-            getActivity().onBackPressed();
+            getActivity().onBackPressed(); //권한이 없으면 이전 fragment 화면으로 돌아감
         }
     }
 }

@@ -1,16 +1,11 @@
 package com.tistory.puzzleleaf.androidminiproject3.fragment;
 
-
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
-import android.support.v4.app.ActivityCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,8 +18,9 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+import com.google.gson.Gson;
 import com.tistory.puzzleleaf.androidminiproject3.R;
-import com.tistory.puzzleleaf.androidminiproject3.db.Db;
+import com.tistory.puzzleleaf.androidminiproject3.item.MarkerData;
 import com.tistory.puzzleleaf.androidminiproject3.service.DbService;
 
 import butterknife.BindView;
@@ -97,10 +93,8 @@ public class AddFragment extends BaseFragment {
             Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN).build(getActivity());
             startActivityForResult(intent, SEARCHADDRESS);
         } catch (GooglePlayServicesRepairableException e) {
-            // TODO: Handle the error.
             Toast.makeText(getContext(),"에러가 발생했습니다.",Toast.LENGTH_SHORT).show();
         } catch (GooglePlayServicesNotAvailableException e) {
-            // TODO: Handle the error.
             Toast.makeText(getContext(),"에러가 발생했습니다.",Toast.LENGTH_SHORT).show();
         }
     }
@@ -126,9 +120,22 @@ public class AddFragment extends BaseFragment {
         countView.setText(String.format(getResources().getString(R.string.text_cnt),description.length()));
     }
 
-    //백그라운드에서 DB데이터를 읽어옴
+    //백그라운드 스레드에서 데이터 insert
+    private void insertData(){
+        Gson gson = new Gson();
+        MarkerData markerData = new MarkerData(name.getText().toString(), address.getText().toString(), number.getText().toString(),
+                description.getText().toString(),Double.parseDouble(latitude), Double.parseDouble(longitude));
+        Intent intent = new Intent(getContext(),DbService.class);
+        intent.putExtra("obj",gson.toJson(markerData));
+        intent.setAction("dbInsert");
+        getActivity().startService(intent);
+
+    }
+
+    //백그라운드 스레드에서 DB데이터를 읽어옴
     private void refreshData(){
         Intent intent = new Intent(getActivity(), DbService.class);
+        intent.setAction("dbRead");
         getActivity().startService(intent);
     }
 
@@ -141,8 +148,7 @@ public class AddFragment extends BaseFragment {
     @OnClick(R.id.add_next)
     public void nextBtn(){
         if(isData()) {
-            Db.dbHelper.insert(name.getText().toString(), address.getText().toString(), number.getText().toString(),
-                    description.getText().toString(), latitude, longitude);
+            insertData();
             dataClear();
             refreshData();
             startFragment(MapFragment.class);

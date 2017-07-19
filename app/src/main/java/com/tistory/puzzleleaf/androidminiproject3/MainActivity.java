@@ -22,9 +22,7 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
-
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
+    @BindView(R.id.toolbar) Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,16 +30,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        Db.dbHelper = new DBHelper(getApplicationContext(), "MarkerData.db", null, 1);
+        beforeInit();
+        fragmentStart();
+    }
 
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+    private void fragmentStart(){
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.fragment, new AddFragment());
         transaction.commit();
     }
 
+    private void beforeInit(){
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Db.dbHelper = new DBHelper(getApplicationContext(), "MarkerData.db", null, 1);
+    }
 
     //상단 버튼
     @OnClick(R.id.add_close)

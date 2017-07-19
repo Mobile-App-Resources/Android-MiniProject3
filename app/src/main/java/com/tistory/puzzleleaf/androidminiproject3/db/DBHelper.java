@@ -17,7 +17,6 @@ import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    // DBHelper 생성자로 관리할 DB 이름과 버전 정보를 받음
     public DBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
@@ -29,14 +28,13 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE MARKER (_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, address TEXT, number TEXT, description TEXT, latitude TEXT, longitude TEXT);");
     }
 
-    // DB 업그레이드를 위해 버전이 변경될 때 호출되는 함수
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
     }
 
     public void insert(String name, String address, String number, String description, String latitude, String longitude) {
-        // 읽고 쓰기가 가능하게 DB 열기
+        // 읽고 쓰기가 가능하게
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("INSERT INTO MARKER VALUES(null, '" + name + "', '" + address + "', '"+ number +"', '" + description + "', '" + latitude + "', '"+ longitude +"');");
         db.close();
@@ -55,12 +53,11 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-
     public ArrayList<MarkerData> getResult() {
         // 읽기가 가능하게 DB 열기
         SQLiteDatabase db = getReadableDatabase();
         ArrayList<MarkerData> markers = new ArrayList<>();
-        // DB에 있는 데이터를 쉽게 처리하기 위해 Cursor를 사용하여 테이블에 있는 모든 데이터 출력
+
         Cursor cursor = db.rawQuery("SELECT * FROM MARKER", null);
         while (cursor.moveToNext()) {
             markers.add(new MarkerData(cursor.getString(1),cursor.getString(2),cursor.getString(3), cursor.getString(4),
