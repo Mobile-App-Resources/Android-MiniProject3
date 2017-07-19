@@ -1,21 +1,14 @@
 # 안드로이드 미니프로젝트 3
 
-<br>
-<p align="center">
-  <img src="readmeImg/img1.gif">
-  <br>
-  <b>[권한 설정]</b>
-</p>
-<br>
-
 ## 1. 개요
 맛집 정보를 등록하고 구글 지도에 정보를 담은 마커를 보여주는 프로젝트<br><br>
 
 <br>
 <p align="center">
+  <img src="readmeImg/img1.gif">
   <img src="readmeImg/img2.gif">
   <br>
-  <b>[실행 화면]</b>
+  <b>[권한 설정 / 실행 화면]</b>
 </p>
 <br>
 
