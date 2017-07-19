@@ -2,8 +2,8 @@
 
 <br>
 <p align="center">
-  <img src="readmeImage/img1.gif">
-  <img src="readmeImage/img2.gif">
+  <img src="readmeImg/img1.gif">
+  <img src="readmeImg/img2.gif">
   <br>
   <b>[실행 화면]</b>
 </p>
