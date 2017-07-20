@@ -4,8 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.tistory.puzzleleaf.androidminiproject3.item.MarkerData;
 
@@ -45,7 +43,7 @@ public class DBHelper extends SQLiteOpenHelper {
         String query = "select * from MARKER where address = '"+address+"';";
         Cursor cursor = db.rawQuery(query,null);
         if(cursor.moveToFirst()){
-            String info = cursor.getString(1) + " " + cursor.getString(3) + " " + cursor.getString(4);
+            String info = "이름 : " + cursor.getString(1) + "\n번호 : " + cursor.getString(3) + "\n설명 : " + cursor.getString(4);
             return info;
         }
         else {

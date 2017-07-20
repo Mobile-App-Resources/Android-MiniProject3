@@ -24,7 +24,4 @@ public class BaseFragment extends Fragment {
         }
         getActivity().getSupportFragmentManager().beginTransaction().add(R.id.fragment,fragment).addToBackStack(null).commit();
     }
-
-
-
 }
